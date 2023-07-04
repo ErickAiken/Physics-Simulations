@@ -23,7 +23,8 @@
             var simTime = startingTime;
             var simSpeed = 1;
 
-            var nParticles = 20000;
+            var nParticles = 2;
+            var radius = 2;
 
             var damping = .25;
             var friction = 0.05;
@@ -57,7 +58,7 @@
             {
                 pos = {x:Math.random()*10, y:Math.random()*10};
                 vel = {x:Math.random()*20, y:Math.random()*20};
-                p = new particle(0.05, 1, pos, vel);
+                p = new particle(radius, 1, pos, vel);
                 particleMap.set(i.toString(), p);
             }
 
@@ -90,7 +91,7 @@
             {
                 delta = delta * simSpeed;
                 simTime += delta;
-                console.log("Simulation Time: ", simTime);
+                //console.log("Simulation Time: ", simTime);
 
                 // Update each particle in the scene
                 for (let [key, value] of particleMap)
@@ -101,33 +102,51 @@
                     value.pos.y += value.vel.y * delta;
 
                     //Check boundary
-                    if(value.pos.x <= 0.0)
+                    if(value.pos.x <= value.radius)
                     {
-                        value.pos.x = 0.0;
+                        value.pos.x = value.radius;
                         value.vel.x = -value.vel.x * (1-damping);
                     }
-                    if(value.pos.x >= simWidth)
+                    if(value.pos.x >= simWidth - value.radius)
                     {
-                        value.pos.x = simWidth;
+                        value.pos.x = simWidth - value.radius;
                         value.vel.x = -value.vel.x * (1-damping);
                         
                     }
-                    if(value.pos.y <= 0.0)
+                    if(value.pos.y <= value.radius)
                     {
-                        value.pos.y = 0.0;
+                        value.pos.y = value.radius;
                         value.vel.y = -value.vel.y * (1-damping);
 
                         //Friction effect
                         value.vel.x = value.vel.x * (1-friction);
                     }
-                    if(value.pos.y >= simHeight)
+                    if(value.pos.y >= simHeight - value.radius)
                     {
-                        value.pos.y = simHeight;
+                        value.pos.y = simHeight - value.radius;
                         value.vel.y = -value.vel.y * (1-damping);
                     }
 
                     // Check collision
+                    for (let [newKey, newValue] of particleMap)
+                    {
+                        if(key == newKey)
+                        {
+                            continue;
+                        }
 
+                        // Get distance between centers of particles
+                        dist = Math.sqrt( (newValue.pos.x - value.pos.x)**2 + (newValue.pos.y - value.pos.y)**2);
+                        console.log(dist);
+                        if(dist <= (value.radius + newValue.radius))
+                        {
+                            value.vel.x = -value.vel.x;
+                            value.vel.y = -value.vel.y;
+                            newValue.vel.x = -newValue.vel.x;
+                            newValue.vel.y = -newValue.vel.y;
+                        }
+
+                    }
 
                 }
                 
