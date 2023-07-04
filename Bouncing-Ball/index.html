@@ -23,8 +23,11 @@
             var simTime = startingTime;
             var simSpeed = 1;
 
+            var nParticles = 20000;
+
             var damping = .25;
             var friction = 0.05;
+            var collisionFactor = 0.05;
 
             canvas.width = window.innerWidth - 20;
             canvas.height = window.innerHeight - 100;
@@ -35,15 +38,28 @@
             var simHeight = canvas.height/cScale;
 
             var gravity = {x: 0.0, y: -9.8};
+            
+            // Create the particle class
+            class particle
+            {
+                constructor(radius, mass, pos, vel)
+                {
+                    this.radius = radius;
+                    this.mass = mass;
+                    this.pos = pos;
+                    this.vel = vel;
+                }
+            }
 
-            var ball = {
-                radius : 0.2, 
-                mass : 1.0,
-                pos : {x : 1, y : 5},
-                vel : {x : -15.0, y : 20.0},
-            };
-
-
+            // Add particles to the object map
+            var particleMap = new Map();
+            for (let i = 0; i < nParticles; i++)
+            {
+                pos = {x:Math.random()*10, y:Math.random()*10};
+                vel = {x:Math.random()*20, y:Math.random()*20};
+                p = new particle(0.05, 1, pos, vel);
+                particleMap.set(i.toString(), p);
+            }
 
 
             function cX(pos)
@@ -59,11 +75,15 @@
             function draw()
             {
                 c.clearRect(0,0,canvas.width, canvas.height);
-                c.fillStyle = "#FF0000";
-                c.beginPath();
-                c.arc(cX(ball.pos), cY(ball.pos), cScale * ball.radius, 0.0, 2.0*Math.PI);
-                c.closePath();
-                c.fill();
+                // Draw each particle in the scene
+                for (let [key,value] of particleMap)
+                {
+                    c.fillStyle = "#FF0000";
+                    c.beginPath();
+                    c.arc(cX(value.pos), cY(value.pos), cScale * value.radius, 0.0, 2.0*Math.PI);
+                    c.closePath();
+                    c.fill();
+                }
             }
 
             function simulate(delta)
@@ -72,35 +92,43 @@
                 simTime += delta;
                 console.log("Simulation Time: ", simTime);
 
-                ball.vel.x += gravity.x * delta;
-                ball.vel.y += gravity.y * delta;
-                ball.pos.x += ball.vel.x * delta;
-                ball.pos.y += ball.vel.y * delta;
+                // Update each particle in the scene
+                for (let [key, value] of particleMap)
+                {
+                    value.vel.x += gravity.x * delta;
+                    value.vel.y += gravity.y * delta;
+                    value.pos.x += value.vel.x * delta;
+                    value.pos.y += value.vel.y * delta;
 
-                //Check boundary
-                if(ball.pos.x <= 0.0)
-                {
-                    ball.pos.x = 0.0;
-                    ball.vel.x = -ball.vel.x * (1-damping);
-                }
-                if(ball.pos.x >= simWidth)
-                {
-                    ball.pos.x = simWidth;
-                    ball.vel.x = -ball.vel.x * (1-damping);
-                    
-                }
-                if(ball.pos.y <= 0.0)
-                {
-                    ball.pos.y = 0.0;
-                    ball.vel.y = -ball.vel.y * (1-damping);
+                    //Check boundary
+                    if(value.pos.x <= 0.0)
+                    {
+                        value.pos.x = 0.0;
+                        value.vel.x = -value.vel.x * (1-damping);
+                    }
+                    if(value.pos.x >= simWidth)
+                    {
+                        value.pos.x = simWidth;
+                        value.vel.x = -value.vel.x * (1-damping);
+                        
+                    }
+                    if(value.pos.y <= 0.0)
+                    {
+                        value.pos.y = 0.0;
+                        value.vel.y = -value.vel.y * (1-damping);
 
-                    //Friction effect
-                    ball.vel.x = ball.vel.x * (1-friction);
-                }
-                if(ball.pos.y >= simHeight)
-                {
-                    ball.pos.y = simHeight;
-                    ball.vel.y = -ball.vel.y * (1-damping);
+                        //Friction effect
+                        value.vel.x = value.vel.x * (1-friction);
+                    }
+                    if(value.pos.y >= simHeight)
+                    {
+                        value.pos.y = simHeight;
+                        value.vel.y = -value.vel.y * (1-damping);
+                    }
+
+                    // Check collision
+
+
                 }
                 
             }
