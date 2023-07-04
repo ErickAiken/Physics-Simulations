@@ -29,6 +29,7 @@ def main(pxWidth, pxHeight):
     simStep = 0.01
 
     nParticles = 100
+    pSize = 10
     
     damping = 0.50
     friction = 0.05
@@ -42,7 +43,7 @@ def main(pxWidth, pxHeight):
         vx = -vmax_initial + 2*vmax_initial*np.random.random()
         vy = -vmax_initial + 2*vmax_initial*np.random.random()
         vz = 0
-        p = Particle(x,y,z,vx,vy,vz)
+        p = Particle(x,y,z,vx,vy,vz,n,pSize)
         particles.append(p)
 
     isRunning = True
@@ -76,11 +77,12 @@ def main(pxWidth, pxHeight):
                 p.vel.y *= -1*(1-damping)
                 p.pos.y = dimy
 
+
         # Update screen
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         drawBoundary(dimx, dimy)
         for p in particles:
-            drawParticle(p.pos, 1,1,1)
+            drawParticle(p, 1,1,1)
         pygame.display.flip()
 
         # Update time
@@ -98,16 +100,18 @@ def drawBoundary(dimx, dimy):
     glEnd()
 
 
-def drawParticle(pos, r, b, g):
+def drawParticle(p, r, b, g):
     glEnable(GL_POINT_SMOOTH)
-    glPointSize(0.1)
+    glPointSize(p.size)
     glBegin(GL_POINTS)
     glColor3d(r,b,g)
-    glVertex3d(pos.x,pos.y,pos.z)
+    glVertex3d(p.pos.x,p.pos.y,p.pos.z)
     glEnd()
    
 class Particle:
-    def __init__(self,x,y,z,vx,vy,vz):
+    def __init__(self,x,y,z,vx,vy,vz,id,size):
+        self.id = id
+        self.size = size
         self.pos = Position()
         self.vel = Velocity()
         self.pos.x = x
