@@ -27,8 +27,13 @@ def main(pxWidth, pxHeight):
 
     simTime = 0
     simStep = 0.01
-    nParticles = 10000
+
+    nParticles = 100000
+    
+    damping = 0.50
+    friction = 0.05
     vmax_initial = 50
+    
     particles = []
     for n in range(nParticles):
         x = -dimx + np.random.random()*2*dimx
@@ -58,13 +63,14 @@ def main(pxWidth, pxHeight):
 
             # Check boundary
             if(p.pos.x <= -dimx):
-                p.vel.x *= -1
+                p.vel.x *= -1*(1-damping)
             if(p.pos.x >= dimx):
-                p.vel.x *= -1
+                p.vel.x *= -1*(1-damping)
             if(p.pos.y <= -dimy):
-                p.vel.y *= -1
+                p.vel.y *= -1*(1-damping)
+                p.vel.x *= (1-friction)
             if(p.pos.y >= dimy):
-                p.vel.y *= -1
+                p.vel.y *= -1*(1-damping)
 
         # Update screen
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
@@ -90,7 +96,7 @@ def drawBoundary(dimx, dimy):
 
 def drawParticle(pos, r, b, g):
     glEnable(GL_POINT_SMOOTH)
-    glPointSize(5)
+    glPointSize(0.1)
     glBegin(GL_POINTS)
     glColor3d(r,b,g)
     glVertex3d(pos.x,pos.y,pos.z)
@@ -128,5 +134,5 @@ def update():
 
 if __name__ == "__main__":
     print("Starting...")
-    main(800, 600)
+    main(1200, 800)
     print("Finished...")
