@@ -28,7 +28,7 @@ def main(pxWidth, pxHeight):
     simTime = 0
     simStep = 0.01
 
-    nParticles = 100000
+    nParticles = 100
     
     damping = 0.50
     friction = 0.05
@@ -64,13 +64,17 @@ def main(pxWidth, pxHeight):
             # Check boundary
             if(p.pos.x <= -dimx):
                 p.vel.x *= -1*(1-damping)
+                p.pos.x = -dimx
             if(p.pos.x >= dimx):
                 p.vel.x *= -1*(1-damping)
+                p.pos.x = dimx
             if(p.pos.y <= -dimy):
                 p.vel.y *= -1*(1-damping)
                 p.vel.x *= (1-friction)
+                p.pos.y = -dimy
             if(p.pos.y >= dimy):
                 p.vel.y *= -1*(1-damping)
+                p.pos.y = dimy
 
         # Update screen
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
