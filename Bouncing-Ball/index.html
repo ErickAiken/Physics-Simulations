@@ -14,24 +14,111 @@
         <canvas id="myCanvas" style="border:2px solid"></canvas>
 
 		<script>
+
+            var canvas = document.getElementById("myCanvas");
+            var c = canvas.getContext("2d");
+            
+            var startingTime = 0.0;
+            var prevTime = startingTime;
+            var simTime = startingTime;
+            var simSpeed = 1;
+
+            var damping = .25;
+            var friction = 0.05;
+
+            canvas.width = window.innerWidth - 20;
+            canvas.height = window.innerHeight - 100;
+
+            var simMinWidth = 20.0;
+            var cScale = Math.min(canvas.width, canvas.height)/simMinWidth;
+            var simWidth = canvas.width/cScale;
+            var simHeight = canvas.height/cScale;
+
+            var gravity = {x: 0.0, y: -9.8};
+
+            var ball = {
+                radius : 0.2, 
+                mass : 1.0,
+                pos : {x : 1, y : 5},
+                vel : {x : -15.0, y : 20.0},
+            };
+
+
+
+
+            function cX(pos)
+            {
+                return pos.x * cScale;
+            }
+
+            function cY(pos)
+            {
+                return canvas.height - pos.y * cScale;
+            }
+
             function draw()
             {
-
+                c.clearRect(0,0,canvas.width, canvas.height);
+                c.fillStyle = "#FF0000";
+                c.beginPath();
+                c.arc(cX(ball.pos), cY(ball.pos), cScale * ball.radius, 0.0, 2.0*Math.PI);
+                c.closePath();
+                c.fill();
             }
 
-            function simulate()
+            function simulate(delta)
             {
+                delta = delta * simSpeed;
+                simTime += delta;
+                console.log("Simulation Time: ", simTime);
 
+                ball.vel.x += gravity.x * delta;
+                ball.vel.y += gravity.y * delta;
+                ball.pos.x += ball.vel.x * delta;
+                ball.pos.y += ball.vel.y * delta;
+
+                //Check boundary
+                if(ball.pos.x <= 0.0)
+                {
+                    ball.pos.x = 0.0;
+                    ball.vel.x = -ball.vel.x * (1-damping);
+                }
+                if(ball.pos.x >= simWidth)
+                {
+                    ball.pos.x = simWidth;
+                    ball.vel.x = -ball.vel.x * (1-damping);
+                    
+                }
+                if(ball.pos.y <= 0.0)
+                {
+                    ball.pos.y = 0.0;
+                    ball.vel.y = -ball.vel.y * (1-damping);
+
+                    //Friction effect
+                    ball.vel.x = ball.vel.x * (1-friction);
+                }
+                if(ball.pos.y >= simHeight)
+                {
+                    ball.pos.y = simHeight;
+                    ball.vel.y = -ball.vel.y * (1-damping);
+                }
+                
             }
 
-            function update()
+            function update(currentTime)
             {
-                simulate();
+
+                //Convert to seconds
+                currentTime = currentTime / 1000.0;
+                delta = currentTime - prevTime;
+                prevTime = currentTime;
+    
+                simulate(delta);
                 draw();
                 requestAnimationFrame(update);
             }
 
-            update();
+            update(startingTime);
 
         </script>
 
