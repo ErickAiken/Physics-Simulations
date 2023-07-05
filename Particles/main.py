@@ -6,20 +6,19 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-def main(pxWidth, pxHeight):
+def main(pxLength):
 
-    dimx = 100
-    dimy = 100
+    dim = 10
 
     pygame.init()
-    display = (pxWidth,pxHeight)
+    display = (pxLength,pxLength)
     pygame.display.set_mode(display, DOUBLEBUF|OPENGL)
     
     # 2D camera and size
-    gluOrtho2D(-1.05*dimx, 
-                1.05*dimx,
-               -1.05*dimy,
-                1.05*dimy)
+    gluOrtho2D(-1.05*dim, 
+                1.05*dim,
+               -1.05*dim,
+                1.05*dim)
 
     # 3D camera and translation
     #gluPerspective(45, (display[0]/display[1]), 0.1, 50.0)
@@ -27,23 +26,24 @@ def main(pxWidth, pxHeight):
 
     simTime = 0
     simStep = 0.01
+    scale = dim/pxLength
 
-    nParticles = 100
-    pSize = 10
+    nParticles = 5
+    pxSize = 25
     
-    damping = 0.50
+    damping = 0.25
     friction = 0.05
-    vmax_initial = 50
+    vmax_initial = 100
     
     particles = []
     for n in range(nParticles):
-        x = -dimx + np.random.random()*2*dimx
-        y = -dimy + np.random.random()*2*dimy
+        x = -dim + np.random.random()*2*dim
+        y = -dim + np.random.random()*2*dim
         z = 0
         vx = -vmax_initial + 2*vmax_initial*np.random.random()
         vy = -vmax_initial + 2*vmax_initial*np.random.random()
         vz = 0
-        p = Particle(x,y,z,vx,vy,vz,n,pSize)
+        p = Particle(x,y,z,vx,vy,vz,n,pxSize)
         particles.append(p)
 
     isRunning = True
@@ -57,30 +57,62 @@ def main(pxWidth, pxHeight):
                 return
 
         # Main simulation
+
+        # Clear the interacted particles list
         for p in particles:
+            p.interacted = []
+
+        # Search for boundary conditions and collisions
+        for p in particles:
+
+            # Apply gravity
             p.vel.y += -9.8*simStep
             p.pos.y += p.vel.y*simStep
             p.pos.x += p.vel.x*simStep
 
             # Check boundary
-            if(p.pos.x <= -dimx):
+            if(p.pos.x <= -dim + p.size*scale):
                 p.vel.x *= -1*(1-damping)
-                p.pos.x = -dimx
-            if(p.pos.x >= dimx):
+                p.pos.x = -dim + p.size*scale
+            if(p.pos.x >= dim - p.size*scale):
                 p.vel.x *= -1*(1-damping)
-                p.pos.x = dimx
-            if(p.pos.y <= -dimy):
+                p.pos.x = dim - p.size*scale
+            if(p.pos.y <= -dim + p.size*scale):
                 p.vel.y *= -1*(1-damping)
                 p.vel.x *= (1-friction)
-                p.pos.y = -dimy
-            if(p.pos.y >= dimy):
+                p.pos.y = -dim + p.size*scale
+            if(p.pos.y >= dim - p.size*scale):
                 p.vel.y *= -1*(1-damping)
-                p.pos.y = dimy
+                p.pos.y = dim - p.size*scale
+
+            # Check for collisions
+            for p_ in particles:
+                
+                # No self interactions
+                if (p.id == p_.id):
+                    continue
+
+                # Prevent duplicate interactions
+                if(p.id in p_.interactions and p_.id in p_interactions):
+                    continue
+                
+                # handle collisions
+                d = np.sqrt((p.pos.x/scale - p_.pos.x/scale)**2 + (p.pos.y/scale - p_.pos.y/scale)**2)
+                
+                if(d <= p.size*2):
+                    p.vel.x *= -1
+                    p.vel.y *= -1
+                    p_.vel.x *= -1
+                    p_.vel.y *= -1
+
+                    # Store that these particles have interacted already
+                    p.interacted.append(p_.id)
+                    p_.interacted.append(p.id)
 
 
         # Update screen
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-        drawBoundary(dimx, dimy)
+        drawBoundary(dim, dim)
         for p in particles:
             drawParticle(p, 1,1,1)
         pygame.display.flip()
@@ -120,6 +152,7 @@ class Particle:
         self.vel.x = vx
         self.vel.y = vy
         self.vel.z = vz
+        self.interactions = []
 
 class Position:
     def __init__(self):
@@ -142,5 +175,5 @@ def update():
 
 if __name__ == "__main__":
     print("Starting...")
-    main(1200, 800)
+    main(800)
     print("Finished...")
